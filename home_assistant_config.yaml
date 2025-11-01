@@ -1,0 +1,106 @@
+# Home Assistant Configuration for Lummi Nation Access Roads Monitor
+# Add this to your configuration.yaml
+
+# Command Line Sensor
+command_line:
+  - sensor:
+      name: "Lummi Access Roads"
+      command: "python3 /home/homeassistant/whatcom_road_closures.py"
+      scan_interval: 86400  # Once per day (actual checks controlled by time-based automation)
+      value_template: "{{ value_json.relevant_closures }}"
+      json_attributes:
+        - total_closures
+        - closures
+        - last_updated
+        - status
+
+# Automations to check during commute hours only
+automation:
+  # Morning check at 3 AM
+  - alias: "Check Roads - Morning Start"
+    trigger:
+      - platform: time
+        at: "03:00:00"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+      - delay: "00:30:00"  # Wait 30 minutes
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+      - delay: "00:30:00"  # Wait 30 minutes
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+      - delay: "00:30:00"  # Wait 30 minutes
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+
+  # Evening check at 3 PM
+  - alias: "Check Roads - Evening Start"
+    trigger:
+      - platform: time
+        at: "15:00:00"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+      - delay: "00:30:00"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+      - delay: "00:30:00"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+      - delay: "00:30:00"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.lummi_access_roads
+
+  # Alert on road closure detected
+  - alias: "Alert on Lummi Access Road Closure"
+    trigger:
+      - platform: state
+        entity_id: sensor.lummi_access_roads
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state | int > 0 }}"
+      - condition: template
+        value_template: "{{ state_attr('sensor.lummi_access_roads', 'status') == 'active' }}"
+    action:
+      - service: notify.mobile_app  # Change to your notification service
+        data:
+          title: "⚠️ Lummi Access Road Closure"
+          message: >
+            {{ state_attr('sensor.lummi_access_roads', 'closures') | length }} 
+            closure(s) on your routes to/from Lummi Nation. Check details.
+          data:
+            priority: high
+            ttl: 0
+            
+# Optional: Create a markdown card to display closures
+# Add to your Lovelace dashboard:
+# 
+# type: markdown
+# content: >
+#   ## Lummi Nation Access Roads
+#   
+#   **Monitored Routes:**
+#   Marine Dr • Slater Rd • Haxton Way • Ferndale Rd • Imhoff Rd
+#   
+#   {% set closures = state_attr('sensor.lummi_access_roads', 'closures') %}
+#   {% if closures %}
+#     ### ⚠️ Current Closures:
+#     {% for closure in closures %}
+#       - **{{ closure.title }}**  
+#         [Details]({{ closure.link }})
+#     {% endfor %}
+#   {% else %}
+#     ✓ All access roads open
+#   {% endif %}
+#   
+#   *Checked during: 3-5am & 3-5pm*  
+#   *Last updated: {{ state_attr('sensor.lummi_access_roads', 'last_updated') }}*
