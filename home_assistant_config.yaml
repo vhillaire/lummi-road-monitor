@@ -5,7 +5,7 @@
 command_line:
   - sensor:
       name: "Lummi Access Roads"
-      command: "python3 /home/homeassistant/whatcom_road_closures.py"
+      command: "python3 /homeassistant/whatcom_road_closures.py"
       scan_interval: 86400  # Once per day (actual checks controlled by time-based automation)
       value_template: "{{ value_json.relevant_closures }}"
       json_attributes:
@@ -71,7 +71,7 @@ automation:
       - condition: template
         value_template: "{{ state_attr('sensor.lummi_access_roads', 'status') == 'active' }}"
     action:
-      - service: notify.mobile_app  # Change to your notification service
+      - service: notify.everyone  # Change to your notification service
         data:
           title: "⚠️ Lummi Access Road Closure"
           message: >
