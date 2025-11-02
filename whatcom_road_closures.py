@@ -53,7 +53,8 @@ MY_ROADS = [
     "Slater Road",
     "Haxton Way",
     "Ferndale Road",
-    "Imhoff Road"
+    "Imhoff Road",
+    "Lummi Shore Road"
 ]
 
 # Auto-generate all variations
@@ -62,10 +63,10 @@ for road in MY_ROADS:
     CRITICAL_ROADS.extend(generate_road_variations(road))
 
 # Only check during commute windows
-MORNING_START = 3   # 3 AM
-MORNING_END = 5     # 5 AM
-EVENING_START = 15  # 3 PM
-EVENING_END = 17    # 5 PM
+MORNING_START = 2   # 2 AM
+MORNING_END = 8     # 8 AM
+EVENING_START = 14  # 2 PM
+EVENING_END = 20    # 8 PM
 
 def is_commute_time():
     """Check if we're in a commute window"""
